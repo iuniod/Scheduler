@@ -1,0 +1,4 @@
+.vscode
+util/*.o
+checker-lin/*.so
+checker-lin/_log
