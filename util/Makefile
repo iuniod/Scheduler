@@ -18,7 +18,7 @@ pack:
 	zip -r 322CA_Caramida_Iustina_Andreea_Tema2.zip util/*
 
 test:
-	gcc -std=gnu99 -g main.c linked_list.c -o test
+	$(CC) -std=gnu99 -g main.c linked_list.c -o test
 
 test_run:
 	valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all ./test
