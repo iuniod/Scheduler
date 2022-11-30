@@ -18,6 +18,7 @@
 typedef struct node {
     void *data;
     struct node *next;
+    int priority;
 } node_t;
 
 /**
@@ -28,7 +29,6 @@ typedef struct node {
  */
 typedef struct linked_list {
     node_t *head;
-    node_t *tail;
     int size;
 } linked_list_t;
 
@@ -38,7 +38,7 @@ typedef struct linked_list {
  * @param data pointer to the data to be stored in the node
  * @return node_t* pointer to the new node
  */
-node_t *node_create(void *data);
+node_t *node_create(void *data, int priority);
 
 /**
  * @brief Destroys a node - frees node memory
@@ -59,23 +59,6 @@ linked_list_t *linked_list_create(void);
  * 
  * @param list pointer to the list to be destroyed
  */
-void linked_list_destroy(linked_list_t *list);
-
-/**
- * @brief Adds a new node to a specific position in the list
- * 
- * @param list pointer to the list
- * @param data pointer to the data to be stored in the node
- * @param position position in the list where the node will be added
- */
-void linked_list_add(linked_list_t **list, void *data, int position);
-
-/**
- * @brief Removes a node from a specific position in the list
- * 
- * @param list pointer to the list
- * @param position position in the list where the node will be removed
- */
-void linked_list_remove(linked_list_t **list, int position);
+void linked_list_destroy(linked_list_t **list);
 
 #endif /* LINKED_LIST_H_ */
