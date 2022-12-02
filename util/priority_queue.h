@@ -19,11 +19,11 @@ typedef struct priority_queue {
 
 priority_queue_t *priority_queue_create(void);
 
-void priority_queue_destroy(priority_queue_t **queue);
+void priority_queue_destroy(priority_queue_t **queue, void (*free_data)(void *));
 
 void push(priority_queue_t **queue, void *data, int priority);
 
-void *pop(priority_queue_t **queue);
+void *pop(priority_queue_t **queue, void (*free_data)(void *));
 
 void *peek(priority_queue_t *queue);
 

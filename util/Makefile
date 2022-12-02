@@ -4,8 +4,8 @@ CFLAGS = -Wall -g -ggdb
 .PHONY: build
 build: libscheduler.so
  
-libscheduler.so: so_scheduler.o linked_list.o priority_queue.o
-	$(CC) $(CFLAGS) -shared so_scheduler.o linked_list.o priority_queue.o -o libscheduler.so
+libscheduler.so: so_scheduler.o linked_list.o priority_queue.o util.o
+	$(CC) $(CFLAGS) -shared so_scheduler.o linked_list.o priority_queue.o util.o -o libscheduler.so
 	cp libscheduler.so ../checker-lin/
 
 so_scheduler.o: so_scheduler.c
@@ -16,6 +16,9 @@ linked_list.o: linked_list.c
 
 priority_queue.o: priority_queue.c
 	$(CC) $(CFLAGS) -fPIC priority_queue.c -c -o priority_queue.o
+
+util.o: util.c
+	$(CC) $(CFLAGS) -fPIC util.c -c -o util.o
 
 pack:
 	zip -r 322CA_Caramida_Iustina_Andreea_Tema2.zip util/*

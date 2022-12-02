@@ -45,7 +45,7 @@ node_t *node_create(void *data, int priority);
  * 
  * @param node pointer to the node to be destroyed
  */
-void node_destroy(node_t *node);
+void node_destroy(node_t *node, void (*free_data)(void *));
 
 /**
  * @brief Creates a new linked list
@@ -59,6 +59,6 @@ linked_list_t *linked_list_create(void);
  * 
  * @param list pointer to the list to be destroyed
  */
-void linked_list_destroy(linked_list_t **list);
+void linked_list_destroy(linked_list_t **list, void (*free_data)(void *));
 
 #endif /* LINKED_LIST_H_ */

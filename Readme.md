@@ -7,7 +7,7 @@
 - [x] do so_init
 - [x] do so_end
 - [ ] do so_exec
-- [ ] do so_fork
+- [ ] do so_fork (work in progress => util.h )
 - [ ] do so_wait
 - [ ] do so_signal
 - [ ] write README.md

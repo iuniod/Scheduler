@@ -15,12 +15,12 @@ priority_queue_t *priority_queue_create(void) {
     return queue;
 }
 
-void priority_queue_destroy(priority_queue_t **queue) {
+void priority_queue_destroy(priority_queue_t **queue, void (*free_data)(void *)) {
     if (*queue == NULL) {
         return;
     }
 
-    linked_list_destroy(&((*queue)->queue));
+    linked_list_destroy(&((*queue)->queue), free_data);
     free(*queue);
     *queue = NULL;
 }
@@ -59,7 +59,7 @@ void push(priority_queue_t **queue, void *data, int priority) {
     (*queue)->size++;
 }
 
-void *pop(priority_queue_t **queue) {
+void *pop(priority_queue_t **queue, void (*free_data)(void *)) {
     if (*queue == NULL) {
         return NULL;
     }
@@ -77,7 +77,7 @@ void *pop(priority_queue_t **queue) {
     void *data = first->data;
 
     // free the first node
-    node_destroy(first);
+    node_destroy(first, free_data);
 
     // update the size of the queue
     (*queue)->size--;

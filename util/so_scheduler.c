@@ -1,56 +1,14 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <pthread.h>
-#include <semaphore.h>
-
 #include "so_scheduler.h"
 #include "priority_queue.h"
-
-#define ERROR -1
-
-typedef struct thread {
-    pthread_t id_thread;
-    int priority;
-    int time_quantum_left;
-    enum thread_state {
-        NEW,
-        READY,
-        RUNNING,
-        WAITING,
-        FINISHED
-    } thread_state;
-    so_handler *handler;
-    sem_t is_running;
-} thread_t;
-
-typedef struct scheduler {
-    int time_quantum;
-    int io_devices;;
-    int no_threads;
-    priority_queue_t *ready;
-    priority_queue_t **waiting;
-    thread_t *running;
-
-} scheduler_t;
-
+#include "util.h"
+#include <errno.h>
 
 scheduler_t *scheduler;
-
-void *thread_handler(void *arg) {
-    thread_t *thread = (thread_t *) arg;
-
-    thread->handler(thread->id_thread);
-
-    thread->thread_state = FINISHED;
-    so_exec();
-
-    return NULL;
-}
 
 DECL_PREFIX int so_init(unsigned int time_quantum, unsigned int io) {
     /* check if scheduler is already initialized of
     if the number of IOs is bigger than the maximum number of IOs*/
-    if (io > SO_MAX_NUM_EVENTS || scheduler) {
+    if (io > SO_MAX_NUM_EVENTS || scheduler || time_quantum <= 0) {
         return ERROR;
     }
 
@@ -67,55 +25,43 @@ DECL_PREFIX int so_init(unsigned int time_quantum, unsigned int io) {
     // allocate memory for the ready threads queue and check if allocation was successful
     scheduler->ready = priority_queue_create();
     if (!scheduler->ready) {
-        return INVALID_TID;
+        return ERROR;
     }
 
     // allocate memory for the waiting threads queues and check if allocation was successful
     scheduler->waiting = calloc(io, sizeof(priority_queue_t *));
     if (!scheduler->waiting) {
-        return INVALID_TID;
+        return ERROR;
     }
     // initialize the waiting threads queues for each IO device and check if initialization was successful
     for (unsigned int i = 0; i < io; i++) {
         scheduler->waiting[i] = priority_queue_create();
         if (!scheduler->waiting[i]) {
-            return INVALID_TID;
+            return ERROR;
         }
     }
+
+    // increase the semaphore value to 1
+    sem_init(&scheduler->running_state, 0, 1);
 
     return 0;
 }
 
 DECL_PREFIX tid_t so_fork(so_handler *func, unsigned int priority) {
     if (!scheduler || !func || priority > SO_MAX_PRIO) {
-        return ERROR;
+        return INVALID_TID;
     }
 
-    // allocate memory for the new thread and check if allocation was successful
-    thread_t *new_thread = calloc(1, sizeof(thread_t));
-    if (!new_thread) {
-        return ERROR;
-    }
+    // create a new thread and initialize it
+    thread_t *new_thread = thread_create(func, priority, scheduler);
+    
+    // wait for the new thread to be initialized
+    sem_wait(&new_thread->initialize_state);
 
-    // initialize the new thread
-    new_thread->id_thread = scheduler->no_threads;
-    new_thread->priority = priority;
-    new_thread->time_quantum_left = scheduler->time_quantum;
-    new_thread->thread_state = NEW;
-    new_thread->handler = func;
-    scheduler->no_threads++;
-
-    // pthread_create(&new_thread->id_thread, NULL, (void *)func, new_thread);
-    // sem_init(&new_thread->is_running, 0, 0);
-
-    // push the new thread in the ready queue
-    new_thread->thread_state = READY;
-    push(&scheduler->ready, new_thread, priority);
-    int ret = new_thread->id_thread;
-    free(new_thread);
+    // IDK if this is necessary
     so_exec();
 
-    return ret;
+    return new_thread->thread_id;
 }
 
 DECL_PREFIX int so_wait(unsigned int io) {
@@ -135,18 +81,49 @@ DECL_PREFIX int so_signal(unsigned int io) {
 }
 
 DECL_PREFIX void so_exec(void) {
+     // check if there is a running thread
     if (!scheduler->running) {
         return;
     }
+
+    /*thread_t *running_thread = scheduler->running;
+    running_thread->time_quantum_left--;
+
+    thread_t *top_thread = peek(scheduler->ready);
+
+    // check if the running thread has finished its time quantum
+    if (running_thread->time_quantum_left == 0) {
+        running_thread->time_quantum_left = scheduler->time_quantum;
+        running_thread->thread_state = READY;
+        push(&(scheduler->ready), running_thread, running_thread->thread_priority);
+        scheduler->running = top_thread;
+        scheduler->running->thread_state = RUNNING;
+        sem_post(&scheduler->running->running_state);
+        pop(&(scheduler->ready), thread_free);
+    } else if (top_thread && running_thread->thread_priority > top_thread->thread_priority) {
+        running_thread->thread_state = READY;
+        push(&(scheduler->ready), running_thread, running_thread->thread_priority);
+        scheduler->running = top_thread;
+        scheduler->running->thread_state = RUNNING;
+        sem_post(&scheduler->running->running_state);
+        pop(&(scheduler->ready), thread_free);
+    }
+
+    if (scheduler->running != running_thread) {
+        sem_wait(&scheduler->running->running_state);
+    }*/
 }
 
 DECL_PREFIX void so_end(void) {
     if (scheduler) {
+        if (scheduler->no_threads != 0) {
+            sem_wait(&scheduler->running_state);
+        }
         // free the waiting threads queues
         if (scheduler->waiting) {
             for (unsigned int i = 0; i < scheduler->io_devices; i++) {
                 if (scheduler->waiting[i]) {
-                    priority_queue_destroy(&(scheduler->waiting[i]));
+                    priority_queue_destroy(&(scheduler->waiting[i]), thread_free);
                 }
             }
             free(scheduler->waiting);
@@ -154,15 +131,16 @@ DECL_PREFIX void so_end(void) {
 
         // free the ready threads queue
         if (scheduler->ready) {
-            priority_queue_destroy(&(scheduler->ready));
+            priority_queue_destroy(&(scheduler->ready), thread_free);
         }
 
         if (scheduler->running) {
-            free(scheduler->running);
+            thread_free(scheduler->running);
         }
 
         // free the scheduler
         free(scheduler);
+        sem_destroy(&scheduler->running_state);
     }
 
     scheduler = NULL;

@@ -10,8 +10,8 @@ node_t *node_create(void *data, int priority) {
     return node;
 }
 
-void node_destroy(node_t *node) {
-    free(node->data);
+void node_destroy(node_t *node, void (*free_data)(void *)) {
+    free_data(node->data);
     free(node);
 }
 
@@ -22,13 +22,13 @@ linked_list_t *linked_list_create() {
     return list;
 }
 
-void linked_list_destroy(linked_list_t **list) {
+void linked_list_destroy(linked_list_t **list, void (*free_data)(void *)) {
     node_t *current = (*list)->head;
 
     // iterate through the list and free all nodes
     while (current != NULL) {
         node_t *next = current->next;
-        free(current);
+        node_destroy(current, free_data);
         current = next;
     }
 
