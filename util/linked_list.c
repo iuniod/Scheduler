@@ -35,3 +35,25 @@ void linked_list_destroy(linked_list_t **list, void (*free_data)(void *)) {
     free(*list);
     *list = NULL;
 }
+
+void linked_list_add(linked_list_t **list, void *data) {
+    if (*list == NULL) {
+        return;
+    }
+    
+    // allocate memory for the new node
+    node_t *new_node = node_create(data, 0);
+    if (new_node == NULL) {
+        return;
+    }
+
+    // if the list is empty, set the new node as head
+    if ((*list)->head == NULL) {
+        (*list)->head = new_node;
+        return;
+    }
+
+    // insert the new node
+    new_node->next = (*list)->head;
+    (*list)->head = new_node;
+}

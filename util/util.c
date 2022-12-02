@@ -36,6 +36,10 @@ void *thread_handler(void *arg) {
     // mark the thread as finished
     thread->thread_state = FINISHED;
 
+    linked_list_add(&(scheduler->finished), thread);
+	scheduler->running = peek(scheduler->ready);
+    pop(&(scheduler->ready), thread_free);
+
     if (scheduler->running != NULL)
 		sem_post(&scheduler->running->running_state);
 
@@ -76,4 +80,15 @@ thread_t *thread_create(so_handler *handler, int priority, scheduler_t *sch) {
     pthread_create(&new_thread->thread_id, NULL, thread_handler, new_thread);
     
     return new_thread;
+}
+
+thread_t *next_priority_thread(scheduler_t *scheduler) {
+    thread_t *thread = peek(scheduler->ready);
+    while (thread && thread->thread_state == FINISHED) {
+        linked_list_add(&(scheduler->finished), thread);
+        pop(&(scheduler->ready), thread_free);
+        thread = peek(scheduler->ready);
+    }
+
+    return thread;
 }

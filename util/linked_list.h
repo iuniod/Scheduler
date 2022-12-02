@@ -55,6 +55,15 @@ void node_destroy(node_t *node, void (*free_data)(void *));
 linked_list_t *linked_list_create(void);
 
 /**
+ * @brief Add a new node to the list - the new node is added
+ * at the beginning of the list
+ * 
+ * @param list the list to which the node is added
+ * @param data pointer to the node data
+ */
+void linked_list_add(linked_list_t **list, void *data);
+
+/**
  * @brief Destroys a linked list - frees all memory
  * 
  * @param list pointer to the list to be destroyed

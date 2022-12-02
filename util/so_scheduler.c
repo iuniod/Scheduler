@@ -28,6 +28,12 @@ DECL_PREFIX int so_init(unsigned int time_quantum, unsigned int io) {
         return ERROR;
     }
 
+    // allocate memory for the finished threads list and check if allocation was successful
+    scheduler->finished = linked_list_create();
+    if (!scheduler->finished) {
+        return ERROR;
+    }
+
     // allocate memory for the waiting threads queues and check if allocation was successful
     scheduler->waiting = calloc(io, sizeof(priority_queue_t *));
     if (!scheduler->waiting) {
@@ -86,7 +92,7 @@ DECL_PREFIX void so_exec(void) {
         return;
     }
 
-    /*thread_t *running_thread = scheduler->running;
+    thread_t *running_thread = scheduler->running;
     running_thread->time_quantum_left--;
 
     thread_t *top_thread = peek(scheduler->ready);
@@ -96,6 +102,8 @@ DECL_PREFIX void so_exec(void) {
         running_thread->time_quantum_left = scheduler->time_quantum;
         running_thread->thread_state = READY;
         push(&(scheduler->ready), running_thread, running_thread->thread_priority);
+
+        top_thread = next_priority_thread(scheduler);
         scheduler->running = top_thread;
         scheduler->running->thread_state = RUNNING;
         sem_post(&scheduler->running->running_state);
@@ -111,7 +119,7 @@ DECL_PREFIX void so_exec(void) {
 
     if (scheduler->running != running_thread) {
         sem_wait(&scheduler->running->running_state);
-    }*/
+    }
 }
 
 DECL_PREFIX void so_end(void) {
@@ -132,6 +140,11 @@ DECL_PREFIX void so_end(void) {
         // free the ready threads queue
         if (scheduler->ready) {
             priority_queue_destroy(&(scheduler->ready), thread_free);
+        }
+
+        // free the finished threads list
+        if (scheduler->finished) {
+            linked_list_destroy(&(scheduler->finished), thread_free);
         }
 
         if (scheduler->running) {

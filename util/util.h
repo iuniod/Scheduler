@@ -34,7 +34,7 @@ typedef struct scheduler {
     priority_queue_t *ready;
     priority_queue_t **waiting;
     thread_t *running;
-
+    linked_list_t *finished;
     sem_t running_state;
 
 } scheduler_t;
@@ -44,5 +44,7 @@ thread_t *thread_create(so_handler *handler, int priority, scheduler_t *schedule
 void *thread_handler(void *arg);
 
 void thread_free(void *arg);
+
+thread_t *next_priority_thread(scheduler_t *scheduler);
 
 #endif /* UTIL_H_ */
