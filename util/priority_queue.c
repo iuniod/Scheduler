@@ -20,7 +20,7 @@ void priority_queue_destroy(priority_queue_t **queue, void (*free_data)(void *))
         return;
     }
 
-    linked_list_destroy(&((*queue)->queue), free_data);
+    linked_list_destroy(&(*queue)->queue, free_data);
     free(*queue);
     *queue = NULL;
 }
@@ -44,16 +44,19 @@ void push(priority_queue_t **queue, void *data, int priority) {
         return;
     }
 
-    while (current != NULL && current->priority < priority) {
+    if (current->priority < priority) {
+        new_node->next = (*queue)->queue->head;
+        (*queue)->queue->head = new_node;
+        (*queue)->size++;
+        return;
+    }
+
+    while (current->next != NULL && current->next->priority >= priority) {
         current = current->next;
     }
 
-    if (current == NULL) {
-        current->next = new_node;
-    } else {
-        new_node->next = current->next;
-        current->next = new_node;
-    }
+    new_node->next = current->next;
+    current->next = new_node;
 
     // update the size of the queue
     (*queue)->size++;

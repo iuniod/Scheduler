@@ -65,7 +65,9 @@ DECL_PREFIX tid_t so_fork(so_handler *func, unsigned int priority) {
     sem_wait(&new_thread->initialize_state);
 
     // IDK if this is necessary
-    so_exec();
+    if (scheduler->running != new_thread) {
+        so_exec();
+    }
 
     return new_thread->thread_id;
 }
@@ -95,26 +97,29 @@ DECL_PREFIX void so_exec(void) {
     thread_t *running_thread = scheduler->running;
     running_thread->time_quantum_left--;
 
-    thread_t *top_thread = peek(scheduler->ready);
+    thread_t *top_thread = next_priority_thread(scheduler);
 
     // check if the running thread has finished its time quantum
-    if (running_thread->time_quantum_left == 0) {
+    if (running_thread->time_quantum_left <= 0) {
         running_thread->time_quantum_left = scheduler->time_quantum;
-        running_thread->thread_state = READY;
-        push(&(scheduler->ready), running_thread, running_thread->thread_priority);
 
-        top_thread = next_priority_thread(scheduler);
-        scheduler->running = top_thread;
-        scheduler->running->thread_state = RUNNING;
-        sem_post(&scheduler->running->running_state);
-        pop(&(scheduler->ready), thread_free);
-    } else if (top_thread && running_thread->thread_priority > top_thread->thread_priority) {
+        if (top_thread && running_thread->thread_priority <= top_thread->thread_priority) {
+            running_thread->thread_state = READY;
+            sem_post(&running_thread->running_state);
+            pop(&(scheduler->ready), thread_free);
+            push(&(scheduler->ready), running_thread, running_thread->thread_priority);
+            running_thread = top_thread;
+            running_thread->thread_state = RUNNING;
+            sem_post(&running_thread->running_state);
+        }
+    } else if (top_thread && running_thread->thread_priority <= top_thread->thread_priority) {
         running_thread->thread_state = READY;
-        push(&(scheduler->ready), running_thread, running_thread->thread_priority);
-        scheduler->running = top_thread;
-        scheduler->running->thread_state = RUNNING;
-        sem_post(&scheduler->running->running_state);
+        sem_post(&running_thread->running_state);
         pop(&(scheduler->ready), thread_free);
+        push(&(scheduler->ready), running_thread, running_thread->thread_priority);
+        running_thread = top_thread;
+        running_thread->thread_state = RUNNING;
+        sem_post(&running_thread->running_state);
     }
 
     if (scheduler->running != running_thread) {

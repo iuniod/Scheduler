@@ -12,7 +12,7 @@ void thread_plan(thread_t *thread) {
         scheduler->running->thread_state = READY;
         push(&(scheduler->ready), scheduler->running, scheduler->running->thread_priority);
         scheduler->running = thread;
-        sem_post(&scheduler->running->running_state);
+        // sem_post(&scheduler->running->running_state);
     } else {
         thread->thread_state = READY;
         push(&(scheduler->ready), thread, thread->thread_priority);
@@ -52,9 +52,10 @@ void *thread_handler(void *arg) {
 
 void thread_free(void *arg) {
     thread_t *thread = (thread_t *) arg;
+
     pthread_join(thread->thread_id, NULL);
-    sem_destroy(&thread->running_state);
-    sem_destroy(&thread->initialize_state);
+    sem_destroy(&(thread->running_state));
+    sem_destroy(&(thread->initialize_state));
     free(thread);
 }
 

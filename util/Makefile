@@ -21,10 +21,10 @@ util.o: util.c
 	$(CC) $(CFLAGS) -fPIC util.c -c -o util.o
 
 pack:
-	zip -r 322CA_Caramida_Iustina_Andreea_Tema2.zip util/*
+	zip -r 322CA_Caramida_Iustina_Andreea_Tema2.zip *.c *.h Makefile ../README
 
 test:
-	$(CC) -std=gnu99 -g main.c linked_list.c -o test
+	$(CC) -std=gnu99 -g main.c linked_list.c priority_queue.c -o test
 
 test_run:
 	valgrind --track-origins=yes --leak-check=full --show-leak-kinds=all ./test
