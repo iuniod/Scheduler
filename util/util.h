@@ -29,7 +29,7 @@ typedef struct thread {
 
 typedef struct scheduler {
     int time_quantum;
-    int io_devices;;
+    int io_devices;
     int no_threads;
     priority_queue_t *ready;
     priority_queue_t **waiting;

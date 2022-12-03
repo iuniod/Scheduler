@@ -2,7 +2,8 @@
 
 scheduler_t *scheduler;
 
-void thread_plan(thread_t *thread) {
+void thread_plan(thread_t *thread)
+{
     if (scheduler->running == NULL) {
         thread->thread_state = RUNNING;
         scheduler->running = thread;
@@ -21,7 +22,8 @@ void thread_plan(thread_t *thread) {
     sem_post(&thread->initialize_state);
 }
 
-void *thread_handler(void *arg) {
+void *thread_handler(void *arg)
+{
     thread_t *thread = (thread_t *) arg;
 
     // initialize the thread
@@ -40,17 +42,17 @@ void *thread_handler(void *arg) {
 	scheduler->running = peek(scheduler->ready);
     pop(&(scheduler->ready), thread_free);
 
-    if (scheduler->running != NULL)
+    if (scheduler->running)
 		sem_post(&scheduler->running->running_state);
 
-    if (scheduler->running == NULL && peek(scheduler->ready) == NULL) {
-			sem_post(&scheduler->running_state);
-    }
+    if (scheduler->running == NULL && peek(scheduler->ready) == NULL)
+		sem_post(&scheduler->running_state);
 
     return NULL;
 }
 
-void thread_free(void *arg) {
+void thread_free(void *arg)
+{
     thread_t *thread = (thread_t *) arg;
 
     pthread_join(thread->thread_id, NULL);
@@ -59,14 +61,15 @@ void thread_free(void *arg) {
     free(thread);
 }
 
-thread_t *thread_create(so_handler *handler, int priority, scheduler_t *sch) {
+thread_t *thread_create(so_handler *handler, int priority, scheduler_t *sch)
+{
     scheduler = sch;
     
     // allocate memory for the new thread and check if allocation was successful
     thread_t *new_thread = calloc(1, sizeof(thread_t));
-    if (!new_thread) {
+
+    if (!new_thread)
         return NULL;
-    }
 
     // initialize the new thread's structure
     new_thread->thread_priority = priority;
@@ -83,7 +86,8 @@ thread_t *thread_create(so_handler *handler, int priority, scheduler_t *sch) {
     return new_thread;
 }
 
-thread_t *next_priority_thread(scheduler_t *scheduler) {
+thread_t *next_priority_thread(scheduler_t *scheduler)
+{
     thread_t *thread = peek(scheduler->ready);
     while (thread && thread->thread_state == FINISHED) {
         linked_list_add(&(scheduler->finished), thread);
