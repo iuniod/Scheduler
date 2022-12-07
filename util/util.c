@@ -1,33 +1,83 @@
 #include "util.h"
 
-scheduler_t *scheduler;
-
-void thread_plan(thread_t *thread)
+void thread_free(void *arg)
 {
-    if (scheduler->running == NULL) {
-        thread->thread_state = RUNNING;
-        scheduler->running = thread;
-        sem_post(&scheduler->running->running_state);
-    } else if (thread->thread_priority > scheduler->running->thread_priority) {
-        thread->thread_state = RUNNING;
-        scheduler->running->thread_state = READY;
-        push(&(scheduler->ready), scheduler->running, scheduler->running->thread_priority);
-        scheduler->running = thread;
-        // sem_post(&scheduler->running->running_state);
-    } else {
-        thread->thread_state = READY;
-        push(&(scheduler->ready), thread, thread->thread_priority);
+    thread_t *thread = (thread_t *) arg;
+
+    pthread_join(thread->thread_id, NULL);
+    sem_destroy(&(thread->running_state));
+    free(thread);
+}
+
+void thread_set(thread_t *thread)
+{
+    thread->thread_state = READY;
+    push(&(scheduler->ready), thread, thread->thread_priority);
+}
+
+void thread_run(thread_t *thread)
+{
+    scheduler->running = thread;
+    pop(&(scheduler->ready));
+    thread->thread_state = RUNNING;
+    sem_post(&(thread->running_state));
+}
+
+thread_t *next_priority_thread(scheduler_t *scheduler)
+{
+    thread_t *thread = peek(scheduler->ready);
+
+    while (thread && thread->thread_state == FINISHED) {
+        linked_list_add(&(scheduler->finished), thread);
+        pop(&(scheduler->ready));
+        thread = peek(scheduler->ready);
     }
 
-    sem_post(&thread->initialize_state);
+    return thread;
+}
+
+void thread_schedule()
+{
+    thread_t *running = scheduler->running;
+    thread_t *top = next_priority_thread(scheduler);
+
+    if (top == NULL) {
+        if (running->thread_state == FINISHED) {
+            sem_post(&(scheduler->running_state));
+        }
+
+        sem_post(&(running->running_state));
+        return;
+    }
+
+    if (running == NULL || running->thread_state == FINISHED) {
+        if (running != NULL)
+            linked_list_add(&(scheduler->finished), running);
+        thread_run(top);
+        return;
+    }
+
+    if (running->time_quantum_left <= 0) {
+        running->time_quantum_left = scheduler->time_quantum;
+        if (top->thread_priority >= running->thread_priority) {
+            thread_set(running);
+            thread_run(top);
+            return;
+        }
+    }
+
+    if (top->thread_priority > running->thread_priority) {
+        thread_set(running);
+        thread_run(top);
+        return;
+    }
+
+    sem_post(&(running->running_state));
 }
 
 void *thread_handler(void *arg)
 {
     thread_t *thread = (thread_t *) arg;
-
-    // initialize the thread
-    thread_plan(thread);
 
     // wait until thread has finished its run
     sem_wait(&thread->running_state);
@@ -38,27 +88,9 @@ void *thread_handler(void *arg)
     // mark the thread as finished
     thread->thread_state = FINISHED;
 
-    linked_list_add(&(scheduler->finished), thread);
-	scheduler->running = peek(scheduler->ready);
-    pop(&(scheduler->ready), thread_free);
-
-    if (scheduler->running)
-		sem_post(&scheduler->running->running_state);
-
-    if (scheduler->running == NULL && peek(scheduler->ready) == NULL)
-		sem_post(&scheduler->running_state);
+    thread_schedule();
 
     return NULL;
-}
-
-void thread_free(void *arg)
-{
-    thread_t *thread = (thread_t *) arg;
-
-    pthread_join(thread->thread_id, NULL);
-    sem_destroy(&(thread->running_state));
-    sem_destroy(&(thread->initialize_state));
-    free(thread);
 }
 
 thread_t *thread_create(so_handler *handler, int priority, scheduler_t *sch)
@@ -76,24 +108,10 @@ thread_t *thread_create(so_handler *handler, int priority, scheduler_t *sch)
     new_thread->time_quantum_left = scheduler->time_quantum;
     new_thread->thread_state = NEW;
     new_thread->thread_handler = handler;
-    scheduler->no_threads++;
     sem_init(&new_thread->running_state, 0, 0);
-    sem_init(&new_thread->initialize_state, 0, 0);
 
     // create the new thread
     pthread_create(&new_thread->thread_id, NULL, thread_handler, new_thread);
     
     return new_thread;
-}
-
-thread_t *next_priority_thread(scheduler_t *scheduler)
-{
-    thread_t *thread = peek(scheduler->ready);
-    while (thread && thread->thread_state == FINISHED) {
-        linked_list_add(&(scheduler->finished), thread);
-        pop(&(scheduler->ready), thread_free);
-        thread = peek(scheduler->ready);
-    }
-
-    return thread;
 }

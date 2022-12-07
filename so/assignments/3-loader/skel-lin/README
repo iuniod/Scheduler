@@ -1,0 +1,34 @@
+Nume: Olteanu Eduard-Florin
+Grupa: 336CAb
+
+Tema 3 - Loader de Executabile
+
+ORGANIZARE
+
+In so_init_loader captez semnalele si daca se primeste un semnal SIGSEGV se
+incearca rezolvarea lui folosind handler-ul. In handler verific daca pagina
+se afla intr-un segment cunoscut sau daca accesarea este corecta din punct de
+vedere al permisiunilor, altfel ies din program cu 139, ceea ce ar face si
+handler-ul default. Daca pagina nu este mapata o mapez si copiez in ea din 
+segmentul din fisier datele corespunzatoare si setez protectia cu persmisiunile
+date in segment.
+
+In so_execute obtin un filedescriptor pentru fisierul din care citesc.
+
+Consider ca tema este oarecum utila pentru a intelege cum sa te folosesti de
+semnale pentru a face diferite prelucrari sau a aduce imbunatatiri codului.
+
+Consider ca implementarea este eficienta.
+
+IMPLEMENTARE
+
+Intregul enunt al temei a fost implementat.
+Am intampinat mai multe dificultati atunci cand a fost nevoie de debugging.
+
+Makefile
+A fost primit in schelet.
+
+Bibliografie
+https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-04
+https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-05
+https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-06

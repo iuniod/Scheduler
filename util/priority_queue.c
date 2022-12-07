@@ -63,7 +63,7 @@ void push(priority_queue_t **queue, void *data, int priority)
     (*queue)->size++;
 }
 
-void *pop(priority_queue_t **queue, void (*free_data)(void *))
+void *pop(priority_queue_t **queue)
 {
     if (*queue == NULL)
         return NULL;
@@ -81,7 +81,7 @@ void *pop(priority_queue_t **queue, void (*free_data)(void *))
     void *data = first->data;
 
     // free the first node
-    node_destroy(first, free_data);
+    free(first);
 
     // update the size of the queue
     (*queue)->size--;

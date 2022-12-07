@@ -1,6 +1,5 @@
 CC = gcc
 CFLAGS = -Wall -g -ggdb
-# TEST?=default_value_if_not_set_in_environment
 .PHONY: build
 build: libscheduler.so
  

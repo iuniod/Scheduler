@@ -1,0 +1,70 @@
+Nume: Olteanu Eduard-Florin
+Grupa: 336CAb
+
+================== Tema 1 SO - Multi-platform development ===================
+
+First I implemented a hashtable based on the model from 1st year Data
+Structures. It is located in hashtable.c with function antets in hashtable.h.
+The hashtable has a data structure that saves the list of buckets, its size
+and the hash function. Another structure is used to define an element of a
+bucket. It stores a key, a value, and a pointer to the next value because I
+implemented the bucket as a list. There are implemented functions for
+everything I needed to do with the hashtable: initialize, find, put, get,
+prind, delete a key or even free the hashtable. Also, there is a specific
+function to create one element of the bucket.
+
+Most of the allocation are dynamic, and where it is necessary the memory is
+reallocated. Every allocated variable is freed at the end of its use.
+Valgrind doesn't show any errors.
+
+In utils.h are 2 antets for functions in so-cpp.c that call eachother.
+In so-cpp.c are implemented all the functions that process the source file.
+First I initialize the hashtable and parse the command line arguments if they
+exist. Then I start parsing the source file: defines and includes ar treated
+separately. Conditionals are resolved in the same function and they are parsed
+recursively in order to solve the nested conditionals problem. The source file
+and include file are parsed with the same function.
+
+
+I do not consider this homework was useful because I didn't feel I learned
+something new or even a part that had something to do with operated systems
+other than the fact we wrote a code that worked on both windows and linux.
+
+
+I do not visualize my solution as perfect or even eficient, I think that some
+things could have been improved but it is not the least eficient because it
+implements a hashtable that is closer to O(1) than to O(n). What could have
+been improved is the way I replace variables from hashtable in line because
+when I put values in hashtable I do not search if some tokens are already
+defined and I replace them in the line and recursive call the function to check
+if new defined tokens appeared.
+
+
+The whole homework was implemented.
+
+I don't remember to have faced difficulties solving the homework, maybe some
+tests could've been more restrictive, or have more cases because most tests
+were just simple test for each functionality implemented.
+
+I think the library that caused allocs to malfunction was interesting, although
+the solution was just to verify if memory was allocked after each call.
+
+
+On linux you compile the homework with 'make'. The makefile is GNUmakefile.
+On windows you use nmake in order to compile the Makefile.
+
+The libraries linked are utils.h and hashtable.h. Build is done first by
+creating object files from .c sources and linking them after.
+The executable file is so-cpp on linux and so-cpp.exe on windows.
+
+
+Usage: ./so-cpp(.exe) [-D <SYMBOL>[=<MAPPING>]] [-I <DIR>] [<INFILE>] 
+						[ [-o] <OUTFILE>] 
+as requested in the homework statement.
+
+
+Bibliography: 13th work laboratory from Data Structures that implemented a
+hashtalbe. (I do not find an 'ocw' link.)
+
+https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-01
+https://ocw.cs.pub.ro/courses/so/laboratoare/laborator-02

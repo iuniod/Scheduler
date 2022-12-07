@@ -24,7 +24,6 @@ typedef struct thread {
     so_handler *thread_handler;
 
     sem_t running_state;
-    sem_t initialize_state;
 } thread_t;
 
 typedef struct scheduler {
@@ -39,12 +38,14 @@ typedef struct scheduler {
 
 } scheduler_t;
 
+scheduler_t *scheduler;
+
+void thread_set(thread_t *thread);
+
+void thread_schedule();
+
 thread_t *thread_create(so_handler *handler, int priority, scheduler_t *scheduler);
 
-void *thread_handler(void *arg);
-
 void thread_free(void *arg);
-
-thread_t *next_priority_thread(scheduler_t *scheduler);
 
 #endif /* UTIL_H_ */

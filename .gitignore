@@ -2,3 +2,4 @@
 util/*.o
 checker-lin/*.so
 checker-lin/_log
+checker-lin/.gdb_history

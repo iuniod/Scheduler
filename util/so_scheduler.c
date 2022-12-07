@@ -3,8 +3,6 @@
 #include "util.h"
 #include <errno.h>
 
-scheduler_t *scheduler;
-
 DECL_PREFIX int so_init(unsigned int time_quantum, unsigned int io)
 {
     /* check if scheduler is already initialized of
@@ -54,14 +52,21 @@ DECL_PREFIX tid_t so_fork(so_handler *func, unsigned int priority)
     if (!scheduler || !func || priority > SO_MAX_PRIO)
         return INVALID_TID;
 
+    if (scheduler->no_threads == 0)
+        sem_wait(&(scheduler->running_state));
+
     // create a new thread and initialize it
     thread_t *new_thread = thread_create(func, priority, scheduler);
-    
-    // wait for the new thread to be initialized
-    sem_wait(&new_thread->initialize_state);
 
-    // IDK if this is necessary
-    if (scheduler->running != new_thread)
+    scheduler->no_threads += 1;
+    if (new_thread->thread_state == NEW) {
+        new_thread->thread_state = READY;
+        push(&(scheduler->ready), new_thread, new_thread->thread_priority);
+    }
+
+    if (scheduler->running == NULL)
+        thread_schedule();
+    else 
         so_exec();
 
     return new_thread->thread_id;
@@ -90,35 +95,11 @@ DECL_PREFIX void so_exec(void)
         return;
 
     thread_t *running_thread = scheduler->running;
-    running_thread->time_quantum_left--;
+    running_thread->time_quantum_left -= 1;
 
-    thread_t *top_thread = next_priority_thread(scheduler);
+    thread_schedule();
 
-    // check if the running thread has finished its time quantum
-    if (running_thread->time_quantum_left <= 0) {
-        running_thread->time_quantum_left = scheduler->time_quantum;
-
-        if (top_thread && running_thread->thread_priority <= top_thread->thread_priority) {
-            running_thread->thread_state = READY;
-            sem_post(&running_thread->running_state);
-            pop(&(scheduler->ready), thread_free);
-            push(&(scheduler->ready), running_thread, running_thread->thread_priority);
-            running_thread = top_thread;
-            running_thread->thread_state = RUNNING;
-            sem_post(&running_thread->running_state);
-        }
-    } else if (top_thread && running_thread->thread_priority <= top_thread->thread_priority) {
-        running_thread->thread_state = READY;
-        sem_post(&running_thread->running_state);
-        pop(&(scheduler->ready), thread_free);
-        push(&(scheduler->ready), running_thread, running_thread->thread_priority);
-        running_thread = top_thread;
-        running_thread->thread_state = RUNNING;
-        sem_post(&running_thread->running_state);
-    }
-
-    if (scheduler->running != running_thread)
-        sem_wait(&scheduler->running->running_state);
+    sem_wait(&(running_thread->running_state));
 }
 
 DECL_PREFIX void so_end(void)
@@ -148,8 +129,8 @@ DECL_PREFIX void so_end(void)
             thread_free(scheduler->running);
 
         // free the scheduler
-        free(scheduler);
         sem_destroy(&scheduler->running_state);
+        free(scheduler);
     }
 
     scheduler = NULL;

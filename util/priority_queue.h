@@ -23,7 +23,7 @@ void priority_queue_destroy(priority_queue_t **queue, void (*free_data)(void *))
 
 void push(priority_queue_t **queue, void *data, int priority);
 
-void *pop(priority_queue_t **queue, void (*free_data)(void *));
+void *pop(priority_queue_t **queue);
 
 void *peek(priority_queue_t *queue);
 
