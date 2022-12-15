@@ -20,7 +20,7 @@ util.o: util.c
 	$(CC) $(CFLAGS) -fPIC util.c -c -o util.o
 
 pack:
-	zip -r 322CA_Caramida_Iustina_Andreea_Tema2.zip *.c *.h Makefile ../README
+	zip -r 322CA_Caramida_Iustina_Andreea_Tema2.zip Makefile *.c *.h Readme.md
 
 test:
 	$(CC) -std=gnu99 -g main.c linked_list.c priority_queue.c -o test

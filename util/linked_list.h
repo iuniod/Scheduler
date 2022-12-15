@@ -16,9 +16,9 @@
  * next: pointer to the next node in the list
  */
 typedef struct node {
-    void *data;
-    struct node *next;
-    int priority;
+	void *data;
+	struct node *next;
+	int priority;
 } node_t;
 
 /**
@@ -28,8 +28,8 @@ typedef struct node {
  * size: number of nodes in the list
  */
 typedef struct linked_list {
-    node_t *head;
-    int size;
+	node_t *head;
+	int size;
 } linked_list_t;
 
 /**
@@ -52,7 +52,7 @@ void node_destroy(node_t *node, void (*free_data)(void *));
  *
  * @return linked_list_t* pointer to the new list
  */
-linked_list_t *linked_list_create();
+linked_list_t *linked_list_create(void);
 
 /**
  * @brief Add a new node to the list - the new node is added
@@ -62,6 +62,15 @@ linked_list_t *linked_list_create();
  * @param data pointer to the node data
  */
 void linked_list_add(linked_list_t **list, void *data);
+
+/**
+ * @brief Removes a node from the list
+ * 
+ * @param list list from which the node is removed
+ * @param pos position of the node to be removed
+ * @return void* pointer to the data stored in the removed node
+ */
+void *linked_list_remove(linked_list_t **list, int pos);
 
 /**
  * @brief Destroys a linked list - frees all memory

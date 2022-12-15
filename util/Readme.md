@@ -59,4 +59,4 @@ In `util.h` there are some functions that are used in `so_scheduler.c` to make t
 - [x] do so_wait
 - [x] do so_signal
 - [x] write README.md
-- [x] upload to vmchecker
+- [ ] upload to vmchecker
